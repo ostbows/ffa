@@ -82,7 +82,7 @@ public class PlayerMotor : MonoBehaviour
 
             moveDirection = lastMoveDirection * speed;
 
-            if (Input.GetButtonDown("Jump"))
+            if (Input.GetButtonDown("Jump") && canMove)
             {
                 canMove = false;
                 isJumping = true;
