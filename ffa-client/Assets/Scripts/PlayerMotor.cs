@@ -15,6 +15,7 @@ public class PlayerMotor : MonoBehaviour
     private Vector3 moveDirection = Vector3.zero;
     private bool canMove = true;
     private bool isJumping = false;
+    private bool isAttacking = false;
     #endregion
 
     #region Raycast
@@ -36,6 +37,11 @@ public class PlayerMotor : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
     }
 
+    private void LateUpdate()
+    {
+        isAttacking = animator.GetInteger("attack") != 0;
+    }
+
     private void Update()
     {
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -46,7 +52,7 @@ public class PlayerMotor : MonoBehaviour
             targetDistance = Vector3.Distance(transform.position, targetPosition);
             maxSpeed = targetDistance > minRunDistance ? runMaxSpeed : walkMaxSpeed;
 
-            if (IsMinWalkDistance())
+            if (IsMinWalkDistance() && !isAttacking)
             {
                 transform.LookAt(targetPosition);
             }
@@ -65,6 +71,15 @@ public class PlayerMotor : MonoBehaviour
                 }
 
                 animator.SetInteger("movement", speed > walkMaxSpeed ? 2 : 1);
+
+                if (Input.GetMouseButtonDown(0))
+                {
+                    canMove = false;
+                    isAttacking = true;
+                    speed *= 1.7f;
+
+                    animator.SetInteger("attack", 1);
+                }
             }
             else
             {
@@ -82,7 +97,7 @@ public class PlayerMotor : MonoBehaviour
 
             moveDirection = lastMoveDirection * speed;
 
-            if (Input.GetButtonDown("Jump") && canMove)
+            if (Input.GetButtonDown("Jump") && canMove && !isAttacking)
             {
                 canMove = false;
                 isJumping = true;
