@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
-public class PlayerMotor : MonoBehaviour {
-
+public class PlayerMotor : MonoBehaviour
+{
     #region Player Controller
     public float speed = 0.0f;
     public float maxSpeed = 0.0f;
@@ -14,6 +14,7 @@ public class PlayerMotor : MonoBehaviour {
     private Vector3 lastMoveDirection = Vector3.zero;
     private Vector3 moveDirection = Vector3.zero;
     private bool canMove = true;
+    private bool isJumping = false;
     #endregion
 
     #region Raycast
@@ -84,11 +85,20 @@ public class PlayerMotor : MonoBehaviour {
             if (Input.GetButtonDown("Jump"))
             {
                 canMove = false;
+                isJumping = true;
                 moveDirection.y = jumpSpeed;
+
+                animator.SetInteger("movement", 3);
             }
             else
             {
                 moveDirection.y = -controller.stepOffset / Time.deltaTime;
+
+                if (isJumping)
+                {
+                    isJumping = false;
+                    animator.SetInteger("movement", 4);
+                }
             }
         }
         else
