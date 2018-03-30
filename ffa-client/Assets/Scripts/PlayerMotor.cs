@@ -4,7 +4,9 @@ public class PlayerMotor : MonoBehaviour {
 
     #region Player Controller
     public float speed = 0.0f;
-    public float maxSpeed = 6.0f;
+    public float maxSpeed = 0.0f;
+    public float walkMaxSpeed = 6.0f;
+    public float runMaxSpeed = 10.0f;
     public float jumpSpeed = 8.0f;
     public float gravity = 20.0f;
 
@@ -21,12 +23,16 @@ public class PlayerMotor : MonoBehaviour {
     private float targetDistance;
 
     public LayerMask layerMask;
-    public float minMoveDistance = 0.1f;
+    public float minWalkDistance = 0.1f;
+    public float minRunDistance = 5.0f;
     #endregion
+
+    private Animator animator;
 
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponentInChildren<Animator>();
     }
 
     private void Update()
@@ -37,21 +43,27 @@ public class PlayerMotor : MonoBehaviour {
         {
             targetPosition = new Vector3(hit.point.x, transform.position.y, hit.point.z);
             targetDistance = Vector3.Distance(transform.position, targetPosition);
-            maxSpeed = targetDistance > 2.0f ? 10.0f : 6.0f;
+            maxSpeed = targetDistance > minRunDistance ? runMaxSpeed : walkMaxSpeed;
 
-            if (IsMinMoveDistance())
+            if (IsMinWalkDistance())
+            {
                 transform.LookAt(targetPosition);
+            }
         }
 
         if (controller.isGrounded)
         {
-            if (Input.GetMouseButton(1) && IsMinMoveDistance() && canMove)
+            if (Input.GetMouseButton(1) && IsMinWalkDistance() && canMove)
             {
                 lastMoveDirection = transform.TransformDirection(Vector3.forward);
                 speed += 10 * Time.deltaTime;
 
                 if (speed > maxSpeed)
+                {
                     speed = maxSpeed;
+                }
+
+                animator.SetInteger("movement", speed > walkMaxSpeed ? 2 : 1);
             }
             else
             {
@@ -63,6 +75,8 @@ public class PlayerMotor : MonoBehaviour {
                     canMove = true;
                     speed = 0;
                 }
+
+                animator.SetInteger("movement", 0);
             }
 
             moveDirection = lastMoveDirection * speed;
@@ -85,8 +99,8 @@ public class PlayerMotor : MonoBehaviour {
         controller.Move(moveDirection * Time.deltaTime);
     }
 
-    private bool IsMinMoveDistance()
+    private bool IsMinWalkDistance()
     {
-        return targetDistance >= minMoveDistance;
+        return targetDistance >= minWalkDistance;
     }
 }
