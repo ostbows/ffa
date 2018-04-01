@@ -54,7 +54,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4356924291990058}
   - component: {fileID: 33432163221708160}
-  - component: {fileID: 65957186160924908}
   - component: {fileID: 23843791939873090}
   m_Layer: 0
   m_Name: Visor
@@ -315,18 +314,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1282360634931408}
   m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
---- !u!65 &65957186160924908
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1184786820682338}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &114090927981576610
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -486,6 +473,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ae68ff38c1d89647a95278814d90725, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  destroyOnDeath: 0
   currentHealth: 100
   healthBar: {fileID: 224562014295303772}
 --- !u!114 &114927155625737704

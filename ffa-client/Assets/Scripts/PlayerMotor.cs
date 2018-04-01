@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.Networking;
 
-public class PlayerMotor : MonoBehaviour
+public class PlayerMotor : NetworkBehaviour
 {
     #region Controller
     public float speed = 0.0f;
@@ -44,19 +45,33 @@ public class PlayerMotor : MonoBehaviour
     private int attackStateForward = 1;
     #endregion
 
-    private void Start()
+    public override void OnStartLocalPlayer()
     {
         controller = GetComponent<CharacterController>();
-        animator = GetComponentInChildren<Animator>();
+        animator = GetComponent<Animator>();
+
+        var cameraMotor = (CameraMotor)Camera.main.GetComponent<CameraMotor>();
+        cameraMotor.player = gameObject;
+        cameraMotor.SetOffset();
     }
 
     private void LateUpdate()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
         isAttacking = animator.GetInteger("attack") != 0;
     }
 
     private void Update()
     {
+        if (!isLocalPlayer)
+        {
+            return;
+        }
+
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))

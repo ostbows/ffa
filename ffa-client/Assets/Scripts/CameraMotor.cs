@@ -6,13 +6,18 @@ public class CameraMotor : MonoBehaviour
 
     private Vector3 offset;
 
-    void Start()
-    {
-        offset = transform.position - player.transform.position;
-    }
-
     void LateUpdate()
     {
+        if (player == null)
+        {
+            return;
+        }
+
         transform.position = player.transform.position + offset;
+    }
+
+    public void SetOffset()
+    {
+        offset = transform.position - player.transform.position;
     }
 }
