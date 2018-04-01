@@ -2,7 +2,7 @@
 
 public class PlayerMotor : MonoBehaviour
 {
-    #region Player Controller
+    #region Controller
     public float speed = 0.0f;
     public float maxSpeed = 0.0f;
     public float walkMaxSpeed = 6.0f;
@@ -13,6 +13,7 @@ public class PlayerMotor : MonoBehaviour
     private CharacterController controller;
     private Vector3 lastMoveDirection = Vector3.zero;
     private Vector3 moveDirection = Vector3.zero;
+    private float verticalVelocity = 0.0f;
     private bool canMove = true;
     private bool isJumping = false;
     private bool isAttacking = false;
@@ -29,7 +30,19 @@ public class PlayerMotor : MonoBehaviour
     public float minRunDistance = 5.0f;
     #endregion
 
+    #region Animator
     private Animator animator;
+
+    private int moveState;
+    private int moveStateIdle = 0;
+    private int moveStateWalk = 1;
+    private int moveStateRun = 2;
+    private int moveStateJump = 3;
+    private int moveStateLand = 4;
+
+    private int attackState;
+    private int attackStateForward = 1;
+    #endregion
 
     private void Start()
     {
@@ -70,7 +83,7 @@ public class PlayerMotor : MonoBehaviour
                     speed = maxSpeed;
                 }
 
-                animator.SetInteger("movement", speed > walkMaxSpeed ? 2 : 1);
+                moveState = speed > walkMaxSpeed ? moveStateRun : moveStateWalk;
 
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -78,7 +91,7 @@ public class PlayerMotor : MonoBehaviour
                     isAttacking = true;
                     speed *= 1.7f;
 
-                    animator.SetInteger("attack", 1);
+                    animator.SetInteger("attack", attackStateForward);
                 }
             }
             else
@@ -92,7 +105,10 @@ public class PlayerMotor : MonoBehaviour
                     speed = 0;
                 }
 
-                animator.SetInteger("movement", 0);
+                if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1))
+                {
+                    moveState = moveStateIdle;
+                }
             }
 
             moveDirection = lastMoveDirection * speed;
@@ -101,26 +117,28 @@ public class PlayerMotor : MonoBehaviour
             {
                 canMove = false;
                 isJumping = true;
-                moveDirection.y = jumpSpeed;
-
-                animator.SetInteger("movement", 3);
+                verticalVelocity = jumpSpeed;
+                moveState = moveStateJump;
             }
             else
             {
-                moveDirection.y = -controller.stepOffset / Time.deltaTime;
+                verticalVelocity = -controller.stepOffset / Time.deltaTime;
 
                 if (isJumping)
                 {
                     isJumping = false;
-                    animator.SetInteger("movement", 4);
+                    moveState = moveStateLand;
                 }
             }
         }
         else
         {
-            moveDirection.y -= gravity * Time.deltaTime;
+            verticalVelocity -= gravity * Time.deltaTime;
         }
 
+        moveDirection.y = verticalVelocity;
+
+        animator.SetInteger("movement", moveState);
         controller.Move(moveDirection * Time.deltaTime);
     }
 
