@@ -11,20 +11,20 @@ public class PlayerMotor : NetworkBehaviour
     public float jumpSpeed = 8.0f;
     public float gravity = 20.0f;
 
-    private CharacterController controller;
-    private Vector3 lastMoveDirection = Vector3.zero;
-    private Vector3 moveDirection = Vector3.zero;
-    private float verticalVelocity = 0.0f;
-    private bool canMove = true;
-    private bool isJumping = false;
-    private bool isAttacking = false;
+    CharacterController controller;
+    Vector3 lastMoveDirection = Vector3.zero;
+    Vector3 moveDirection = Vector3.zero;
+    float verticalVelocity = 0.0f;
+    bool canMove = true;
+    bool isJumping = false;
+    bool isAttacking = false;
     #endregion
 
     #region Raycast
-    private Ray ray;
-    private RaycastHit hit;
-    private Vector3 targetPosition;
-    private float targetDistance;
+    Ray ray;
+    RaycastHit hit;
+    Vector3 targetPosition;
+    float targetDistance;
 
     public LayerMask layerMask;
     public float minWalkDistance = 0.1f;
@@ -32,17 +32,18 @@ public class PlayerMotor : NetworkBehaviour
     #endregion
 
     #region Animator
-    private Animator animator;
+    Animator animator;
+    OnForwardAttack onForwardAttackBehaviour;
 
-    private int moveState;
-    private int moveStateIdle = 0;
-    private int moveStateWalk = 1;
-    private int moveStateRun = 2;
-    private int moveStateJump = 3;
-    private int moveStateLand = 4;
+    int moveState;
+    int lastMoveState;
+    int moveStateIdle = 0;
+    int moveStateWalk = 1;
+    int moveStateRun = 2;
+    int moveStateJump = 3;
+    int moveStateLand = 4;
 
-    private int attackState;
-    private int attackStateForward = 1;
+    int attackStateForward = 1;
     #endregion
 
     public override void OnStartLocalPlayer()
@@ -50,27 +51,22 @@ public class PlayerMotor : NetworkBehaviour
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
 
+        onForwardAttackBehaviour = animator.GetBehaviour<OnForwardAttack>();
+        onForwardAttackBehaviour.playerMotor = this;
+
         var cameraMotor = (CameraMotor)Camera.main.GetComponent<CameraMotor>();
         cameraMotor.player = gameObject;
         cameraMotor.SetOffset();
     }
 
-    private void LateUpdate()
+    public void ResetIsAttacking()
     {
-        if (!isLocalPlayer)
-        {
-            return;
-        }
-
-        isAttacking = animator.GetInteger("attack") != 0;
+        isAttacking = false;
     }
 
-    private void Update()
+    void Update()
     {
-        if (!isLocalPlayer)
-        {
-            return;
-        }
+        if (!isLocalPlayer) return;
 
         ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -80,10 +76,7 @@ public class PlayerMotor : NetworkBehaviour
             targetDistance = Vector3.Distance(transform.position, targetPosition);
             maxSpeed = targetDistance > minRunDistance ? runMaxSpeed : walkMaxSpeed;
 
-            if (IsMinWalkDistance() && !isAttacking)
-            {
-                transform.LookAt(targetPosition);
-            }
+            RotatePlayerCheck();
         }
 
         if (controller.isGrounded)
@@ -100,14 +93,7 @@ public class PlayerMotor : NetworkBehaviour
 
                 moveState = speed > walkMaxSpeed ? moveStateRun : moveStateWalk;
 
-                if (Input.GetMouseButtonDown(0))
-                {
-                    canMove = false;
-                    isAttacking = true;
-                    speed *= 1.7f;
-
-                    animator.SetInteger("attack", attackStateForward);
-                }
+                ForwardAttackCheck();
             }
             else
             {
@@ -153,11 +139,40 @@ public class PlayerMotor : NetworkBehaviour
 
         moveDirection.y = verticalVelocity;
 
-        animator.SetInteger("movement", moveState);
+        SetMoveState();
         controller.Move(moveDirection * Time.deltaTime);
     }
 
-    private bool IsMinWalkDistance()
+    void RotatePlayerCheck()
+    {
+        if (IsMinWalkDistance() && !isAttacking)
+        {
+            transform.LookAt(targetPosition);
+        }
+    }
+
+    void ForwardAttackCheck()
+    {
+        if (Input.GetMouseButtonDown(0) && moveState == moveStateRun)
+        {
+            canMove = false;
+            isAttacking = true;
+            speed *= 1.7f;
+
+            animator.SetInteger("attack", attackStateForward);
+        }
+    }
+
+    void SetMoveState()
+    {
+        if (lastMoveState != moveState)
+        {
+            lastMoveState = moveState;
+            animator.SetInteger("movement", moveState);
+        }
+    }
+
+    bool IsMinWalkDistance()
     {
         return targetDistance >= minWalkDistance;
     }
