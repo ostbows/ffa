@@ -6,12 +6,16 @@ public class PlayerHitbox : NetworkBehaviour
 {
     public GameObject[] hitboxes;
 
-    Dictionary<string, BoxCollider> colliders;
+    Dictionary<string, BoxCollider> colliders = new Dictionary<string, BoxCollider>();
 
     public override void OnStartLocalPlayer()
     {
-        colliders = new Dictionary<string, BoxCollider>();
+        CmdGetColliders();
+    }
 
+    [Command]
+    void CmdGetColliders()
+    {
         for (int i = 0; i < hitboxes.Length; i++)
         {
             string name = hitboxes[i].name;
@@ -21,16 +25,18 @@ public class PlayerHitbox : NetworkBehaviour
         }
     }
 
-    void UnarmedAtkForwardStart() // Event
+    [Command]
+    void CmdEnableHitbox(string hitbox) // Event
     {
-        if (!isLocalPlayer) return;
+        if (!isServer) return;
 
-        colliders["LowerLegRHitbox"].enabled = true;
+        colliders[hitbox].enabled = true;
     }
-    void UnarmedAtkForwardEnd() // Event
+    [Command]
+    void CmdDisableHitbox(string hitbox) // Event
     {
-        if (!isLocalPlayer) return;
+        if (!isServer) return;
 
-        colliders["LowerLegRHitbox"].enabled = false;
+        colliders[hitbox].enabled = false;
     }
 }

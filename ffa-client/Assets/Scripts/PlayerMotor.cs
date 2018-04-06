@@ -176,4 +176,19 @@ public class PlayerMotor : NetworkBehaviour
     {
         return targetDistance >= minWalkDistance;
     }
+
+    public void Move(Vector3 direction)
+    {
+        if (!isServer) return;
+
+        RpcMove(direction);
+    }
+
+    [ClientRpc]
+    void RpcMove(Vector3 direction)
+    {
+        if (!isLocalPlayer) return;
+
+        controller.Move(direction);
+    }
 }

@@ -4,12 +4,17 @@ public class PlayerHitboxOnCollision : MonoBehaviour
 {
     void OnTriggerEnter(Collider other)
     {
-        // Todo: Compare network ID
-        if (other.gameObject.name == transform.root.name)
+        if (other.transform == transform.root)
         {
             return;
         }
-        // Todo: Destroy on server
-        Destroy(other.gameObject);
+
+        PlayerMotor playerMotor = other.GetComponent<PlayerMotor>();
+
+        if (playerMotor != null)
+        {
+            Vector3 attackerDirection = transform.root.TransformDirection(Vector3.forward);
+            playerMotor.Move(attackerDirection * 2.0f);
+        }
     }
 }
