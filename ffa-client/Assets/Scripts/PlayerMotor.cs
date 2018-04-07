@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerMotor : NetworkBehaviour
@@ -46,22 +47,46 @@ public class PlayerMotor : NetworkBehaviour
     int attackStateForward = 1;
     #endregion
 
-    public override void OnStartLocalPlayer()
+    PlayerHitbox playerHitbox;
+    CameraMotor cameraMotor;
+
+    void Awake()
     {
         controller = GetComponent<CharacterController>();
-        animator = GetComponent<Animator>();
+        playerHitbox = GetComponent<PlayerHitbox>();
 
+        animator = GetComponent<Animator>();
         onForwardAttackBehaviour = animator.GetBehaviour<OnForwardAttack>();
         onForwardAttackBehaviour.playerMotor = this;
+    }
 
-        var cameraMotor = (CameraMotor)Camera.main.GetComponent<CameraMotor>();
-        cameraMotor.player = gameObject;
-        cameraMotor.SetOffset();
+    private void OnDestroy()
+    {
+        if (cameraMotor != null)
+        {
+            cameraMotor.player = null;
+            cameraMotor.ResetCamera();
+        }
+    }
+
+    public override void OnStartLocalPlayer()
+    {
+        cameraMotor = Camera.main.GetComponent<CameraMotor>();
+
+        if (cameraMotor != null)
+        {
+            cameraMotor.player = gameObject;
+            cameraMotor.SetOffset();
+        }
     }
 
     public void ResetIsAttacking()
     {
-        isAttacking = false;
+        if (isLocalPlayer)
+        {
+            isAttacking = false;
+            animator.SetInteger("attack", 0);
+        }
     }
 
     void Update()
@@ -139,7 +164,12 @@ public class PlayerMotor : NetworkBehaviour
 
         moveDirection.y = verticalVelocity;
 
-        SetMoveState();
+        if (lastMoveState != moveState)
+        {
+            lastMoveState = moveState;
+            animator.SetInteger("movement", moveState);
+        }
+
         controller.Move(moveDirection * Time.deltaTime);
     }
 
@@ -153,23 +183,23 @@ public class PlayerMotor : NetworkBehaviour
 
     void ForwardAttackCheck()
     {
-        if (Input.GetMouseButtonDown(0) && moveState == moveStateRun)
+        if (Input.GetMouseButtonDown(0) && !isAttacking && moveState == moveStateRun)
         {
-            canMove = false;
             isAttacking = true;
-            speed *= 1.7f;
-
-            animator.SetInteger("attack", attackStateForward);
+            StartCoroutine("ForwardAttack");
         }
     }
 
-    void SetMoveState()
+    IEnumerator ForwardAttack()
     {
-        if (lastMoveState != moveState)
-        {
-            lastMoveState = moveState;
-            animator.SetInteger("movement", moveState);
-        }
+        playerHitbox.CmdToggleHitbox("LowerLegRHitbox", 0.6f);
+
+        yield return new WaitForSeconds(0.15f);
+
+        canMove = false;
+        speed *= 1.7f;
+
+        animator.SetInteger("attack", attackStateForward);
     }
 
     bool IsMinWalkDistance()
@@ -179,16 +209,20 @@ public class PlayerMotor : NetworkBehaviour
 
     public void Move(Vector3 direction)
     {
-        if (!isServer) return;
-
-        RpcMove(direction);
+        if (isServer)
+        {
+            RpcMove(direction);
+        }
     }
 
     [ClientRpc]
     void RpcMove(Vector3 direction)
     {
-        if (!isLocalPlayer) return;
-
-        controller.Move(direction);
+        if (isLocalPlayer)
+        {
+            canMove = false;
+            lastMoveDirection = direction;
+            speed = runMaxSpeed;
+        }
     }
 }

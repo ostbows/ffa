@@ -2,19 +2,28 @@
 
 public class PlayerHitboxOnCollision : MonoBehaviour
 {
+    Transform player;
+    SphereCollider hitbox;
+
+    void Awake()
+    {
+        player = transform.root;
+        hitbox = this.GetComponent<SphereCollider>();
+    }
+
     void OnTriggerEnter(Collider other)
     {
-        if (other.transform == transform.root)
+        if (other.transform != player)
         {
-            return;
-        }
+            PlayerMotor targetPlayerMotor = other.GetComponent<PlayerMotor>();
 
-        PlayerMotor playerMotor = other.GetComponent<PlayerMotor>();
+            if (targetPlayerMotor != null)
+            {
+                hitbox.enabled = false;
 
-        if (playerMotor != null)
-        {
-            Vector3 attackerDirection = transform.root.TransformDirection(Vector3.forward);
-            playerMotor.Move(attackerDirection * 2.0f);
+                Vector3 playerDirection = transform.root.TransformDirection(Vector3.forward);
+                targetPlayerMotor.Move(playerDirection);
+            }
         }
     }
 }

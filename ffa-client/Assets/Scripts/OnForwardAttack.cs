@@ -16,8 +16,6 @@ public class OnForwardAttack : StateMachineBehaviour {
 
 	// OnStateExit is called when a transition ends and the state machine finishes evaluating this state
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex) {
-        animator.SetInteger("attack", 0);
-
         if (playerMotor != null)
         {
             playerMotor.ResetIsAttacking();

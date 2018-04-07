@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -6,36 +7,42 @@ public class PlayerHitbox : NetworkBehaviour
 {
     public GameObject[] hitboxes;
 
-    Dictionary<string, BoxCollider> colliders = new Dictionary<string, BoxCollider>();
+    Dictionary<string, SphereCollider> colliders = new Dictionary<string, SphereCollider>();
 
-    public override void OnStartLocalPlayer()
+    void Start()
     {
-        CmdGetColliders();
+        if (isServer)
+        {
+            CacheColliders();
+        }
     }
 
-    [Command]
-    void CmdGetColliders()
+    [Server]
+    void CacheColliders()
     {
         for (int i = 0; i < hitboxes.Length; i++)
         {
             string name = hitboxes[i].name;
-            BoxCollider collider = hitboxes[i].GetComponent<BoxCollider>();
+            SphereCollider collider = hitboxes[i].GetComponent<SphereCollider>();
 
             colliders.Add(name, collider);
         }
     }
 
     [Command]
-    void CmdEnableHitbox(string hitbox) // Event
+    public void CmdToggleHitbox(string hitbox, float duration)
     {
-        if (!isServer) return;
+        if (colliders.ContainsKey(hitbox))
+        {
+            colliders[hitbox].enabled = true;
 
-        colliders[hitbox].enabled = true;
+            StartCoroutine(DisableHitbox(hitbox, duration));
+        }
     }
-    [Command]
-    void CmdDisableHitbox(string hitbox) // Event
+
+    IEnumerator DisableHitbox(string hitbox, float duration)
     {
-        if (!isServer) return;
+        yield return new WaitForSeconds(duration);
 
         colliders[hitbox].enabled = false;
     }
