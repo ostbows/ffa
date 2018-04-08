@@ -47,24 +47,24 @@ public class PlayerMotor : NetworkBehaviour
     const int moveStateJump = 3;
     const int moveStateLand = 4;
 
+    int attackState;
+    int lastAttackState;
+    const int attackStateNone = 0;
     const int attackStateForward = 1;
     #endregion
 
     public PlayerHitbox playerHitbox;
+    float inputDelay = 0.1f;
 
     void Start()
     {
-        var onForwardAttackBehaviour = animator.GetBehaviour<OnForwardAttack>();
-
         if (!isLocalPlayer)
         {
-            Destroy(onForwardAttackBehaviour);
             Destroy(this);
-
             return;
         }
 
-        onForwardAttackBehaviour.playerMotor = this;
+        animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
     }
 
     void Update()
@@ -107,7 +107,7 @@ public class PlayerMotor : NetworkBehaviour
                     speed = 0;
                 }
 
-                if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1))
+                if (!isJumping && !isAttacking)
                 {
                     moveState = moveStateIdle;
                 }
@@ -139,14 +139,10 @@ public class PlayerMotor : NetworkBehaviour
         }
 
         moveDirection.y = verticalVelocity;
-
-        if (lastMoveState != moveState)
-        {
-            lastMoveState = moveState;
-            animator.SetInteger("movement", moveState);
-        }
-
         controller.Move(moveDirection * Time.deltaTime);
+
+        SetMoveState();
+        SetAttackState();
     }
 
     void RotatePlayerCheck()
@@ -157,18 +153,41 @@ public class PlayerMotor : NetworkBehaviour
         }
     }
 
+    void SetMoveState()
+    {
+        if (lastMoveState != moveState)
+        {
+            lastMoveState = moveState;
+            animator.SetInteger("movement", moveState);
+        }
+    }
+
+    void SetAttackState()
+    {
+        if (lastAttackState != attackState)
+        {
+            lastAttackState = attackState;
+            animator.SetInteger("attack", attackState);
+        }
+    }
+
     void ForwardAttackCheck()
     {
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
-            playerHitbox.CmdSpawnHitbox(0, 5.0f, 0.5f, 0.25f);
-
             isAttacking = true;
-            canMove = false;
-            speed *= 1.2f;
 
-            animator.SetInteger("attack", attackStateForward);
+            playerHitbox.CmdSpawnHitbox(0, 5.0f, 0.5f, 0.2f);
+            StartCoroutine("ForwardAttack");
         }
+    }
+    IEnumerator ForwardAttack()
+    {
+        yield return new WaitForSeconds(inputDelay);
+
+        canMove = false;
+        speed *= 1.2f;
+        attackState = attackStateForward;
     }
 
     bool IsMinWalkDistance()
@@ -179,7 +198,7 @@ public class PlayerMotor : NetworkBehaviour
     public void ResetIsAttacking()
     {
         isAttacking = false;
-        animator.SetInteger("attack", 0);
+        attackState = attackStateNone;
     }
 
     public void Knockback(Vector3 direction)
