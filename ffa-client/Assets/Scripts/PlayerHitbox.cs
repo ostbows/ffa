@@ -1,49 +1,32 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerHitbox : NetworkBehaviour
 {
-    public GameObject[] hitboxes;
-
-    Dictionary<string, SphereCollider> colliders = new Dictionary<string, SphereCollider>();
+    public GameObject hitboxPrefab;
+    public Transform[] spawnpoints;
 
     void Start()
     {
-        if (isServer)
+        if (!isLocalPlayer && !isServer)
         {
-            CacheColliders();
-        }
-    }
-
-    [Server]
-    void CacheColliders()
-    {
-        for (int i = 0; i < hitboxes.Length; i++)
-        {
-            string name = hitboxes[i].name;
-            SphereCollider collider = hitboxes[i].GetComponent<SphereCollider>();
-
-            colliders.Add(name, collider);
+            Destroy(this);
         }
     }
 
     [Command]
-    public void CmdToggleHitbox(string hitbox, float duration)
+    public void CmdSpawnHitbox(int index, float velocity, float duration)
     {
-        if (colliders.ContainsKey(hitbox))
-        {
-            colliders[hitbox].enabled = true;
+        var hitbox = (GameObject)Instantiate(
+            hitboxPrefab,
+            spawnpoints[index].position,
+            spawnpoints[index].rotation);
 
-            StartCoroutine(DisableHitbox(hitbox, duration));
-        }
-    }
+        hitbox.GetComponent<Rigidbody>().velocity = hitbox.transform.forward * velocity;
+        hitbox.GetComponent<Hitbox>().spawnerNetId = gameObject.GetComponent<NetworkIdentity>().netId.ToString();
 
-    IEnumerator DisableHitbox(string hitbox, float duration)
-    {
-        yield return new WaitForSeconds(duration);
+        NetworkServer.Spawn(hitbox);
 
-        colliders[hitbox].enabled = false;
+        Destroy(hitbox, duration);
     }
 }

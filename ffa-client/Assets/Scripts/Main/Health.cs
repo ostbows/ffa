@@ -23,6 +23,11 @@ public class Health : NetworkBehaviour
 
     public void TakeDamage(int amount)
     {
+        if (isLocalPlayer)
+        {
+            transform.Translate(Vector3.forward);
+        }
+
         if (!isServer)
         {
             return;
