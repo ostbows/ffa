@@ -48,18 +48,19 @@ public class PlayerMotor : NetworkBehaviour
 
     PlayerHitbox playerHitbox;
 
-    void Awake()
+    void Start()
     {
+        if (!isLocalPlayer)
+        {
+            Destroy(this);
+            return;
+        }
+
         playerHitbox = GetComponent<PlayerHitbox>();
         controller = GetComponent<CharacterController>();
 
         animator = GetComponent<Animator>();
         animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
-    }
-
-    void Start()
-    {
-        if (!isLocalPlayer) Destroy(this);
     }
 
     void Update()
@@ -179,13 +180,6 @@ public class PlayerMotor : NetworkBehaviour
         return targetDistance >= minWalkDistance;
     }
 
-    public void Knockback(Vector3 direction)
-    {
-        canMove = false;
-        lastMoveDirection = direction;
-        speed = runMaxSpeed;
-    }
-
     public void ResetIsAttacking()
     {
         if (isLocalPlayer)
@@ -193,5 +187,12 @@ public class PlayerMotor : NetworkBehaviour
             isAttacking = false;
             animator.SetInteger("attack", 0);
         }
+    }
+
+    public void Knockback(Vector3 direction)
+    {
+        canMove = false;
+        lastMoveDirection = direction;
+        speed = runMaxSpeed;
     }
 }

@@ -5,13 +5,17 @@ public class PlayerHitbox : NetworkBehaviour
 {
     public GameObject hitboxPrefab;
     public Transform[] spawnpoints;
+    public string playerNetId;
 
     void Start()
     {
         if (!isLocalPlayer && !isServer)
         {
             Destroy(this);
+            return;
         }
+
+        playerNetId = gameObject.GetComponent<NetworkIdentity>().netId.ToString();
     }
 
     [Command]
@@ -23,7 +27,7 @@ public class PlayerHitbox : NetworkBehaviour
             spawnpoints[index].rotation);
 
         hitbox.GetComponent<Rigidbody>().velocity = hitbox.transform.forward * velocity;
-        hitbox.GetComponent<Hitbox>().spawnerNetId = gameObject.GetComponent<NetworkIdentity>().netId.ToString();
+        hitbox.GetComponent<Hitbox>().spawnerNetId = playerNetId;
 
         NetworkServer.Spawn(hitbox);
 
