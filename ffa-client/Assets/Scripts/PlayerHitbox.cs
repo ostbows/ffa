@@ -1,11 +1,14 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerHitbox : NetworkBehaviour
 {
     public GameObject hitboxPrefab;
     public Transform[] spawnpoints;
-    public string playerNetId;
+    public NetworkIdentity networkIdentity;
+
+    [SerializeField] string playerNetId;
 
     void Start()
     {
@@ -15,12 +18,20 @@ public class PlayerHitbox : NetworkBehaviour
             return;
         }
 
-        playerNetId = gameObject.GetComponent<NetworkIdentity>().netId.ToString();
+        playerNetId = networkIdentity.netId.ToString();
     }
 
     [Command]
-    public void CmdSpawnHitbox(int index, float velocity, float duration)
+    public void CmdSpawnHitbox(int index, float velocity, float delay, float duration)
     {
+        StartCoroutine(SpawnHitbox(index, velocity, delay, duration));
+    }
+
+    [Server]
+    IEnumerator SpawnHitbox(int index, float velocity, float delay, float duration)
+    {
+        yield return new WaitForSeconds(delay);
+
         var hitbox = (GameObject)Instantiate(
             hitboxPrefab,
             spawnpoints[index].position,
