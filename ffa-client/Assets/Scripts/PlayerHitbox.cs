@@ -4,44 +4,41 @@ using UnityEngine.Networking;
 
 public class PlayerHitbox : NetworkBehaviour
 {
-    public GameObject hitboxPrefab;
-    public Transform[] spawnpoints;
-    public NetworkIdentity networkIdentity;
+    public SphereCollider[] hitboxes;
+    public PlayerMotor playerMotor;
 
-    [SerializeField] string playerNetId;
-
-    void Start()
-    {
-        if (!isLocalPlayer && !isServer)
-        {
-            Destroy(this);
-            return;
-        }
-
-        playerNetId = networkIdentity.netId.ToString();
-    }
+    [SyncVar(hook = "OnHitboxEnable")]
+    public int hitbox = -1;
 
     [Command]
-    public void CmdSpawnHitbox(int index, float velocity, float delay, float duration)
+    public void CmdActivateHitbox(int hib)
     {
-        StartCoroutine(SpawnHitbox(index, velocity, delay, duration));
+        hitbox = hib;
     }
 
-    [Server]
-    IEnumerator SpawnHitbox(int index, float velocity, float delay, float duration)
+    void OnHitboxEnable(int hitbox)
     {
-        yield return new WaitForSeconds(delay);
+        if (hitbox == -1) return;
+        hitboxes[hitbox].enabled = true;
+        StartCoroutine(DisableHitbox(hitbox));
+    }
+    IEnumerator DisableHitbox(int hib)
+    {
+        yield return new WaitForSeconds(1.0f);
 
-        var hitbox = (GameObject)Instantiate(
-            hitboxPrefab,
-            spawnpoints[index].position,
-            spawnpoints[index].rotation);
+        if (isServer) hitbox = -1;
+        hitboxes[hib].enabled = false;
+    }
 
-        hitbox.GetComponent<Rigidbody>().velocity = hitbox.transform.forward * velocity;
-        hitbox.GetComponent<Hitbox>().spawnerNetId = playerNetId;
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.transform.root == transform) return;
+        other.enabled = false;
 
-        NetworkServer.Spawn(hitbox);
-
-        Destroy(hitbox, duration);
+        if (playerMotor != null)
+        {
+            Vector3 otherDirection = other.transform.TransformDirection(Vector3.forward);
+            playerMotor.Knockback(otherDirection);
+        }
     }
 }

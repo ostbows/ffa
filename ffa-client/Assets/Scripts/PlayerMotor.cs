@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerMotor : NetworkBehaviour
@@ -54,9 +53,8 @@ public class PlayerMotor : NetworkBehaviour
     #endregion
 
     public PlayerHitbox playerHitbox;
-    float inputDelay = 0.1f;
 
-    void Start()
+    private void Start()
     {
         if (!isLocalPlayer)
         {
@@ -64,6 +62,7 @@ public class PlayerMotor : NetworkBehaviour
             return;
         }
 
+        playerHitbox.playerMotor = this;
         animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
     }
 
@@ -175,19 +174,13 @@ public class PlayerMotor : NetworkBehaviour
     {
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
+            playerHitbox.CmdActivateHitbox(0);
+
             isAttacking = true;
-
-            playerHitbox.CmdSpawnHitbox(0, 5.0f, 0.5f, 0.2f);
-            StartCoroutine("ForwardAttack");
+            canMove = false;
+            speed *= 1.2f;
+            attackState = attackStateForward;
         }
-    }
-    IEnumerator ForwardAttack()
-    {
-        yield return new WaitForSeconds(inputDelay);
-
-        canMove = false;
-        speed *= 1.2f;
-        attackState = attackStateForward;
     }
 
     bool IsMinWalkDistance()

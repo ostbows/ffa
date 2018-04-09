@@ -14,5 +14,5 @@ public class OnForwardAttack : StateMachineBehaviour
         {
             animator.SetInteger("attack", 0);
         }
-	}
+    }
 }
