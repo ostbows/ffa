@@ -6,13 +6,7 @@ public class OnForwardAttack : StateMachineBehaviour
 
 	override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        if (playerMotor != null)
-        {
-            playerMotor.ResetIsAttacking();
-        }
-        else
-        {
-            animator.SetInteger("attack", 0);
-        }
+        if (playerMotor == null) Destroy(this);
+        playerMotor.ResetIsAttacking();
     }
 }

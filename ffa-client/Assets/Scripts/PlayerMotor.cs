@@ -36,7 +36,8 @@ public class PlayerMotor : NetworkBehaviour
     #endregion
 
     #region Animator
-    public Animator animator;
+    public NetworkAnimator networkAnimator;
+    Animator animator;
 
     int moveState;
     int lastMoveState;
@@ -45,16 +46,18 @@ public class PlayerMotor : NetworkBehaviour
     const int moveStateRun = 2;
     const int moveStateJump = 3;
     const int moveStateLand = 4;
-
-    int attackState;
-    int lastAttackState;
-    const int attackStateNone = 0;
-    const int attackStateForward = 1;
     #endregion
 
+    public NetworkIdentity networkIdentity;
     public PlayerHitbox playerHitbox;
 
-    private void Start()
+    void Awake()
+    {
+        animator = networkAnimator.animator;
+        animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
+    }
+
+    void Start()
     {
         if (!isLocalPlayer)
         {
@@ -62,8 +65,10 @@ public class PlayerMotor : NetworkBehaviour
             return;
         }
 
-        playerHitbox.playerMotor = this;
-        animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
+        if (isServer && isLocalPlayer)
+        {
+            networkIdentity.localPlayerAuthority = false;
+        }
     }
 
     void Update()
@@ -141,7 +146,6 @@ public class PlayerMotor : NetworkBehaviour
         controller.Move(moveDirection * Time.deltaTime);
 
         SetMoveState();
-        SetAttackState();
     }
 
     void RotatePlayerCheck()
@@ -156,17 +160,8 @@ public class PlayerMotor : NetworkBehaviour
     {
         if (lastMoveState != moveState)
         {
-            lastMoveState = moveState;
             animator.SetInteger("movement", moveState);
-        }
-    }
-
-    void SetAttackState()
-    {
-        if (lastAttackState != attackState)
-        {
-            lastAttackState = attackState;
-            animator.SetInteger("attack", attackState);
+            lastMoveState = moveState;
         }
     }
 
@@ -174,12 +169,12 @@ public class PlayerMotor : NetworkBehaviour
     {
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
+            networkAnimator.SetTrigger("forwardAttack");
             playerHitbox.CmdActivateHitbox(0);
 
             isAttacking = true;
             canMove = false;
             speed *= 1.2f;
-            attackState = attackStateForward;
         }
     }
 
@@ -191,7 +186,6 @@ public class PlayerMotor : NetworkBehaviour
     public void ResetIsAttacking()
     {
         isAttacking = false;
-        attackState = attackStateNone;
     }
 
     public void Knockback(Vector3 direction)

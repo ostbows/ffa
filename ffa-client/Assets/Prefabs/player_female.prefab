@@ -2207,7 +2207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Animator: {fileID: 95802019035949866}
-  m_ParameterSendBits: 3
+  m_ParameterSendBits: 7
   param0: 
   param1: 
   param2: 
@@ -2236,7 +2236,8 @@ MonoBehaviour:
   layerMask:
     serializedVersion: 2
     m_Bits: 256
-  animator: {fileID: 95802019035949866}
+  networkAnimator: {fileID: 114025881274746438}
+  networkIdentity: {fileID: 114507038268313516}
   playerHitbox: {fileID: 114815307857715118}
 --- !u!114 &114315187508094956
 MonoBehaviour:
@@ -2295,7 +2296,7 @@ MonoBehaviour:
   m_TransformSyncMode: 4
   m_SendInterval: 0.04761905
   m_SyncRotationAxis: 2
-  m_RotationSyncCompression: 2
+  m_RotationSyncCompression: 1
   m_SyncSpin: 0
   m_MovementTheshold: 0.001
   m_VelocityThreshold: 0.0001
@@ -2315,8 +2316,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hitboxes:
   - {fileID: 135597688060373364}
-  playerMotor: {fileID: 0}
-  hitbox: -1
+  playerMotor: {fileID: 114246743840209146}
 --- !u!135 &135597688060373364
 SphereCollider:
   m_ObjectHideFlags: 1
