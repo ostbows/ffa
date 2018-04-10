@@ -1,23 +1,36 @@
 ﻿using UnityEngine;
 using UnityEngine.Networking;
 
+class AnimatorHash
+{
+    public int movement;
+    public int forwardAttack;
+}
+
+class MoveState
+{
+    public int idle = 0;
+    public int walk = 1;
+    public int run = 2;
+    public int jump = 3;
+    public int land = 4;
+}
+
 public class PlayerMotor : NetworkBehaviour
 {
     #region Controller
     public CharacterController controller;
-
-    [SerializeField] float speed;
-    [SerializeField] float maxSpeed;
-    [SerializeField] float verticalVelocity;
-
     public float walkMaxSpeed = 6.0f;
     public float runMaxSpeed = 10.0f;
     public float jumpSpeed = 8.0f;
     public float gravity = 20.0f;
 
+    [SerializeField] float speed;
+    [SerializeField] float maxSpeed;
+    [SerializeField] float verticalVelocity;
+
     Vector3 lastMoveDirection;
     Vector3 moveDirection;
-    
     bool canMove = true;
     bool isJumping = false;
     bool isAttacking = false;
@@ -37,15 +50,11 @@ public class PlayerMotor : NetworkBehaviour
 
     #region Animator
     public NetworkAnimator networkAnimator;
-    Animator animator;
 
+    Animator animator;
+    AnimatorHash animatorHash;
+    MoveState moveStates;
     int moveState;
-    int lastMoveState;
-    const int moveStateIdle = 0;
-    const int moveStateWalk = 1;
-    const int moveStateRun = 2;
-    const int moveStateJump = 3;
-    const int moveStateLand = 4;
     #endregion
 
     public NetworkIdentity networkIdentity;
@@ -55,6 +64,14 @@ public class PlayerMotor : NetworkBehaviour
     {
         animator = networkAnimator.animator;
         animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
+
+        animatorHash = new AnimatorHash
+        {
+            movement = Animator.StringToHash("movement"),
+            forwardAttack = Animator.StringToHash("forwardAttack")
+        };
+
+        moveStates = new MoveState();
     }
 
     void Start()
@@ -96,7 +113,7 @@ public class PlayerMotor : NetworkBehaviour
                     speed = maxSpeed;
                 }
 
-                moveState = speed > walkMaxSpeed ? moveStateRun : moveStateWalk;
+                moveState = speed > walkMaxSpeed ? moveStates.run : moveStates.walk;
 
                 ForwardAttackCheck();
             }
@@ -113,7 +130,7 @@ public class PlayerMotor : NetworkBehaviour
 
                 if (!isJumping && !isAttacking)
                 {
-                    moveState = moveStateIdle;
+                    moveState = moveStates.idle;
                 }
             }
 
@@ -124,7 +141,7 @@ public class PlayerMotor : NetworkBehaviour
                 canMove = false;
                 isJumping = true;
                 verticalVelocity = jumpSpeed;
-                moveState = moveStateJump;
+                moveState = moveStates.jump;
             }
             else
             {
@@ -133,9 +150,11 @@ public class PlayerMotor : NetworkBehaviour
                 if (isJumping)
                 {
                     isJumping = false;
-                    moveState = moveStateLand;
+                    moveState = moveStates.land;
                 }
             }
+
+            animator.SetInteger(animatorHash.movement, moveState);
         }
         else
         {
@@ -144,8 +163,6 @@ public class PlayerMotor : NetworkBehaviour
 
         moveDirection.y = verticalVelocity;
         controller.Move(moveDirection * Time.deltaTime);
-
-        SetMoveState();
     }
 
     void RotatePlayerCheck()
@@ -156,20 +173,11 @@ public class PlayerMotor : NetworkBehaviour
         }
     }
 
-    void SetMoveState()
-    {
-        if (lastMoveState != moveState)
-        {
-            animator.SetInteger("movement", moveState);
-            lastMoveState = moveState;
-        }
-    }
-
     void ForwardAttackCheck()
     {
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
-            networkAnimator.SetTrigger("forwardAttack");
+            networkAnimator.SetTrigger(animatorHash.forwardAttack);
             playerHitbox.CmdActivateHitbox(0);
 
             isAttacking = true;
