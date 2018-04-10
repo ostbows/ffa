@@ -13,7 +13,6 @@ class MoveState
     public int walk = 1;
     public int run = 2;
     public int jump = 3;
-    public int land = 4;
 }
 
 public class PlayerMotor : NetworkBehaviour
@@ -122,7 +121,7 @@ public class PlayerMotor : NetworkBehaviour
                 canMove = false;
                 speed -= 20 * Time.deltaTime;
 
-                if (speed < 0)
+                if (speed <= 0)
                 {
                     canMove = true;
                     speed = 0;
@@ -150,7 +149,7 @@ public class PlayerMotor : NetworkBehaviour
                 if (isJumping)
                 {
                     isJumping = false;
-                    moveState = moveStates.land;
+                    moveState = moveStates.idle;
                 }
             }
 
