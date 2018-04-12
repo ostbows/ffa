@@ -2101,7 +2101,7 @@ MeshRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1168670732440576}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -2226,16 +2226,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   controller: {fileID: 143234271722034858}
-  speed: 0
-  maxSpeed: 6
-  verticalVelocity: 0
   walkMaxSpeed: 6
   runMaxSpeed: 10
   jumpSpeed: 8
   gravity: 20
+  speed: 0
+  maxSpeed: 6
+  verticalVelocity: 0
   layerMask:
     serializedVersion: 2
     m_Bits: 256
+  rotationSpeed: 600
   networkAnimator: {fileID: 114025881274746438}
   networkIdentity: {fileID: 114507038268313516}
   playerHitbox: {fileID: 114815307857715118}

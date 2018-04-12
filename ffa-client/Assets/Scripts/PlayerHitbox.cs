@@ -1,24 +1,10 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Networking;
 
 public class PlayerHitbox : NetworkBehaviour
 {
     public SphereCollider[] hitboxes;
     public PlayerMotor playerMotor;
-
-    [Command]
-    public void CmdActivateHitbox(int hib)
-    {
-        hitboxes[hib].enabled = true;
-        StartCoroutine(DisableHitbox(hib));
-    }
-    IEnumerator DisableHitbox(int hib)
-    {
-        yield return new WaitForSeconds(0.5f);
-
-        hitboxes[hib].enabled = false;
-    }
 
     void OnTriggerEnter(Collider other)
     {
@@ -40,5 +26,15 @@ public class PlayerHitbox : NetworkBehaviour
         {
             playerMotor.Knockback(direction);
         }
+    }
+
+    void EnableHitbox(int hitbox)
+    {
+        hitboxes[hitbox].enabled = true;
+    }
+
+    void DisableHitbox(int hitbox)
+    {
+        hitboxes[hitbox].enabled = false;
     }
 }

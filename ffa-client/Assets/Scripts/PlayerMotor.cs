@@ -37,6 +37,7 @@ public class PlayerMotor : NetworkBehaviour
 
     #region Raycast
     public LayerMask layerMask;
+    public float rotationSpeed = 1000.0f;
 
     Ray ray;
     RaycastHit hit;
@@ -56,21 +57,17 @@ public class PlayerMotor : NetworkBehaviour
     int moveState;
     #endregion
 
-    public NetworkIdentity networkIdentity;
-    public PlayerHitbox playerHitbox;
-
     void Awake()
     {
         animator = networkAnimator.animator;
         animator.GetBehaviour<OnForwardAttack>().playerMotor = this;
 
+        moveStates = new MoveState();
         animatorHash = new AnimatorHash
         {
             movement = Animator.StringToHash("movement"),
             forwardAttack = Animator.StringToHash("forwardAttack")
         };
-
-        moveStates = new MoveState();
     }
 
     void Start()
@@ -83,7 +80,7 @@ public class PlayerMotor : NetworkBehaviour
 
         if (isServer && isLocalPlayer)
         {
-            networkIdentity.localPlayerAuthority = false;
+            gameObject.GetComponent<NetworkIdentity>().localPlayerAuthority = false;
         }
     }
 
@@ -168,7 +165,8 @@ public class PlayerMotor : NetworkBehaviour
     {
         if (IsMinWalkDistance() && !isAttacking)
         {
-            transform.LookAt(targetPosition);
+            Quaternion lookRotation = Quaternion.LookRotation(targetPosition - transform.position);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, lookRotation, rotationSpeed * Time.deltaTime);
         }
     }
 
@@ -177,7 +175,6 @@ public class PlayerMotor : NetworkBehaviour
         if (Input.GetMouseButtonDown(0) && !isAttacking)
         {
             networkAnimator.SetTrigger(animatorHash.forwardAttack);
-            playerHitbox.CmdActivateHitbox(0);
 
             isAttacking = true;
             canMove = false;
