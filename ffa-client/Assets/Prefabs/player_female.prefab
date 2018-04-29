@@ -2238,8 +2238,6 @@ MonoBehaviour:
     m_Bits: 256
   rotationSpeed: 600
   networkAnimator: {fileID: 114025881274746438}
-  networkIdentity: {fileID: 114507038268313516}
-  playerHitbox: {fileID: 114815307857715118}
 --- !u!114 &114315187508094956
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2318,6 +2316,7 @@ MonoBehaviour:
   hitboxes:
   - {fileID: 135597688060373364}
   playerMotor: {fileID: 114246743840209146}
+  networkAnimator: {fileID: 114025881274746438}
 --- !u!135 &135597688060373364
 SphereCollider:
   m_ObjectHideFlags: 1

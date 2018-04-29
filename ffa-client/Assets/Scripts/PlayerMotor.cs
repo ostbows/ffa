@@ -5,6 +5,7 @@ class AnimatorHash
 {
     public int movement;
     public int forwardAttack;
+    public int hurt;
 }
 
 class MoveState
@@ -18,6 +19,7 @@ class MoveState
 public class PlayerMotor : NetworkBehaviour
 {
     #region Controller
+    [Header("Controller")]
     public CharacterController controller;
     public float walkMaxSpeed = 6.0f;
     public float runMaxSpeed = 10.0f;
@@ -36,6 +38,7 @@ public class PlayerMotor : NetworkBehaviour
     #endregion
 
     #region Raycast
+    [Header("Raycast")]
     public LayerMask layerMask;
     public float rotationSpeed = 1000.0f;
 
@@ -49,6 +52,7 @@ public class PlayerMotor : NetworkBehaviour
     #endregion
 
     #region Animator
+    [Header("Animator")]
     public NetworkAnimator networkAnimator;
 
     Animator animator;
@@ -66,7 +70,8 @@ public class PlayerMotor : NetworkBehaviour
         animatorHash = new AnimatorHash
         {
             movement = Animator.StringToHash("movement"),
-            forwardAttack = Animator.StringToHash("forwardAttack")
+            forwardAttack = Animator.StringToHash("forwardAttack"),
+            hurt = Animator.StringToHash("hurt")
         };
     }
 
@@ -194,6 +199,8 @@ public class PlayerMotor : NetworkBehaviour
 
     public void Knockback(Vector3 direction)
     {
+        networkAnimator.SetTrigger(animatorHash.hurt);
+
         canMove = false;
         lastMoveDirection = direction;
         speed = runMaxSpeed;
